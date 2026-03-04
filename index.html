@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>学习闹钟提醒</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- 用户设置弹窗 -->
+    <div id="settingsModal" class="modal show" data-mode="">
+        <div class="modal-content settings-modal">
+            <button id="closeSettingsModal" class="btn-close-modal">✕</button>
+            <h2>基本设置</h2>
+            <div class="settings-form">
+                <!-- 第一行： 昵称 -->
+                <div class="form-row-single">
+                    <label class="form-label" for="newUserName">昵称</label>
+                    <input type="text" id="newUserName" placeholder="请输入名字" maxlength="10">
+                </div>
+                <!-- 第二行： 角色 -->
+                <div class="form-row-single">
+                    <label class="form-label">角色</label>
+                    <div class="identity-options">
+                        <label class="identity-option">
+                            <input type="radio" name="identity" value="student" checked>
+                            <span class="identity-card">
+                                <span class="identity-icon">📚</span>
+                                <span class="identity-title">小学生</span>
+                            </span>
+                        </label>
+                        <label class="identity-option">
+                            <input type="radio" name="identity" value="toddler">
+                            <span class="identity-card">
+                                <span class="identity-icon">🎈</span>
+                                <span class="identity-title">婴幼儿</span>
+                            </span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <button id="saveSettings" class="btn btn-primary btn-large">开始使用</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <header>
+            <div class="header-top">
+                <h1 id="pageTitle">学习闹钟提醒</h1>
+                <button id="openSettings" class="btn btn-icon" title="设置">⚙️</button>
+            </div>
+            <div class="current-time">
+                <div class="rainbow-decoration"></div>
+                <div class="cloud-decoration"></div>
+                <div class="grass-decoration"></div>
+                <span class="flower-decoration">🌸</span>
+                <span class="flower-decoration2">🌼</span>
+                <span class="flower-decoration3">🌺</span>
+                <span id="currentTime">00:00:00</span>
+                <span id="currentDate"></span>
+                <span id="dayType" class="day-badge"></span>
+            </div>
+        </header>
+
+        <div class="controls">
+            <button id="voiceTest" class="btn btn-secondary">测试语音</button>
+            <button id="editSchedule" class="btn btn-info">编辑时间表</button>
+            <button id="resetToday" class="btn btn-warning">重置今日</button>
+            <div class="voice-settings">
+                <label for="voiceSelect">语音:</label>
+                <select id="voiceSelect"></select>
+                <label for="volumeSlider">音量:</label>
+                <input type="range" id="volumeSlider" min="0" max="1" step="0.1" value="1">
+            </div>
+        </div>
+
+        <div class="schedule-tabs" id="scheduleTabs">
+            <button class="tab-btn active" data-tab="weekday">工作日</button>
+            <button class="tab-btn" data-tab="weekend">周末/节假日</button>
+        </div>
+
+        <div class="schedules">
+            <!-- 工作日时间表 -->
+            <div id="weekday" class="schedule-panel">
+                <h2 id="weekdayTitle">🏫 工作日</h2>
+                <div class="task-list" id="weekdayTasks"></div>
+            </div>
+
+            <!-- 周末时间表 -->
+            <div id="weekend" class="schedule-panel">
+                <h2 id="weekendTitle">🌞 周末 / 节假日</h2>
+                <div class="task-list" id="weekendTasks"></div>
+            </div>
+        </div>
+
+        <div class="stats">
+            <div class="stats-header">
+                <h3>今日进度</h3>
+                <button id="showProgressDetail" class="btn btn-small btn-detail">详情</button>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <p id="progressText">已完成 0/0 项任务</p>
+        </div>
+
+        <div class="next-task" id="nextTaskPanel">
+            <h3>下一个任务</h3>
+            <p id="nextTaskText">--</p>
+        </div>
+    </div>
+
+    <!-- 提醒弹窗 -->
+    <div id="reminderModal" class="modal">
+        <div class="modal-content">
+            <h2>提醒</h2>
+            <p id="reminderText"></p>
+            <button id="reminderClose" class="btn btn-primary">知道了</button>
+        </div>
+    </div>
+
+    <!-- 编辑时间表弹窗 -->
+    <div id="editModal" class="modal">
+        <div class="modal-content edit-modal">
+            <div class="edit-header">
+                <h2>编辑时间表</h2>
+                <button id="closeEditModal" class="btn btn-icon">✕</button>
+            </div>
+            <div class="edit-tabs">
+                <button class="edit-tab-btn active" data-edit-tab="weekday">工作日</button>
+                <button class="edit-tab-btn" data-edit-tab="weekend">周末</button>
+            </div>
+            <div class="edit-content">
+                <div id="editWeekday" class="edit-panel active">
+                    <div class="task-editor" id="weekdayEditor"></div>
+                    <button class="btn btn-add-task" data-type="weekday">+ 添加任务</button>
+                </div>
+                <div id="editWeekend" class="edit-panel">
+                    <div class="task-editor" id="weekendEditor"></div>
+                    <button class="btn btn-add-task" data-type="weekend">+ 添加任务</button>
+                </div>
+            </div>
+            <div class="edit-actions">
+                <button id="resetSchedule" class="btn btn-warning">恢复默认</button>
+                <button id="saveSchedule" class="btn btn-primary">保存修改</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 今日进度详情弹窗 -->
+    <div id="progressDetailModal" class="modal">
+        <div class="modal-content progress-detail-modal">
+            <div class="edit-header">
+                <h2>今日任务详情</h2>
+                <button id="closeProgressDetail" class="btn btn-icon">✕</button>
+            </div>
+            <div class="progress-detail-content">
+                <div class="detail-section">
+                    <h4 class="detail-title completed-title">✅ 已完成</h4>
+                    <div id="completedTaskList" class="detail-list"></div>
+                </div>
+                <div class="detail-section">
+                    <h4 class="detail-title inprogress-title">🔄 进行中</h4>
+                    <div id="inProgressTaskList" class="detail-list"></div>
+                </div>
+                <div class="detail-section">
+                    <h4 class="detail-title pending-title">⏳ 待完成</h4>
+                    <div id="pendingTaskList" class="detail-list"></div>
+                </div>
+                <div class="detail-section">
+                    <h4 class="detail-title passed-title">⏰ 已过期</h4>
+                    <div id="passedTaskList" class="detail-list"></div>
+                </div>
+            </div>
+            <div class="edit-actions">
+                <button id="closeProgressDetailBtn" class="btn btn-primary">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
