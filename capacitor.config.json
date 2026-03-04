@@ -1,0 +1,8 @@
+{
+  "appId": "com.clock.study",
+  "appName": "学习闹钟",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https"
+  }
+}
