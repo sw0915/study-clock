@@ -828,14 +828,26 @@ function setupEventListeners() {
         userSettings = { name, identity, customSchedules: null };
         localStorage.setItem('userSettings', JSON.stringify(userSettings));
 
-        document.getElementById('settingsModal').classList.remove('show');
+        // Android兼容：使用多种方式关闭弹窗
+        const settingsModal = document.getElementById('settingsModal');
+        settingsModal.classList.remove('show');
+        settingsModal.style.display = 'none';
+
         updatePageTitle();
         renderTasks();
 
+        // Android兼容：延迟播放语音，需要用户交互
         const welcomeMsg = identity === 'toddler'
             ? `${name}小朋友你好，我是你的小助手，会提醒你该做什么事情啦！`
             : `${name}同学你好，我是你的学习小助手，会提醒你学习和休息的时间！`;
-        setTimeout(() => speak(welcomeMsg), 500);
+        setTimeout(() => {
+            // 尝试播放语音，如果失败则静默处理
+            try {
+                speak(welcomeMsg);
+            } catch(e) {
+                console.log('语音播放需要用户交互');
+            }
+        }, 500);
     });
 
     // 打开设置（编辑当前用户）
@@ -849,21 +861,28 @@ function setupEventListeners() {
             document.querySelector(`input[name="identity"][value="${defaultIdentity}"]`).checked = true;
             document.getElementById('newUserName').value = savedNames[defaultIdentity] || '';
         }
-        document.getElementById('settingsModal').classList.add('show');
+        // Android兼容：使用多种方式打开弹窗
+        const settingsModal = document.getElementById('settingsModal');
+        settingsModal.classList.add('show');
+        settingsModal.style.display = 'flex';
     });
 
     // 关闭设置弹窗
     document.getElementById('closeSettingsModal').addEventListener('click', () => {
         // 只有已设置用户时才能关闭
         if (userSettings) {
-            document.getElementById('settingsModal').classList.remove('show');
+            const settingsModal = document.getElementById('settingsModal');
+            settingsModal.classList.remove('show');
+            settingsModal.style.display = 'none';
         }
     });
 
     // 点击背景关闭设置弹窗
     document.getElementById('settingsModal').addEventListener('click', (e) => {
         if (e.target.id === 'settingsModal' && userSettings) {
-            document.getElementById('settingsModal').classList.remove('show');
+            const settingsModal = document.getElementById('settingsModal');
+            settingsModal.classList.remove('show');
+            settingsModal.style.display = 'none';
         }
     });
 
