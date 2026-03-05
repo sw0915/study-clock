@@ -1224,86 +1224,260 @@ h1::before {
 
 /* Responsive */
 @media (max-width: 600px) {
+    body {
+        padding: 10px;
+    }
+
     .container {
-        padding: 15px;
-        border-radius: 25px;
+        padding: 12px;
+        border-radius: 20px;
     }
 
     h1 {
-        font-size: 1.2em;
+        font-size: 1.1em;
+    }
+
+    h2 {
+        font-size: 1.1em;
+    }
+
+    h3 {
+        font-size: 1em;
     }
 
     #currentTime {
-        font-size: 2.5em;
+        font-size: 2.2em;
+    }
+
+    #currentDate {
+        font-size: 0.85em;
     }
 
     .task-item {
         flex-wrap: wrap;
-        padding: 15px;
+        padding: 12px;
+        font-size: 0.9em;
     }
 
     .task-time {
-        min-width: 70px;
-        font-size: 0.9em;
+        min-width: 60px;
+        font-size: 0.85em;
     }
 
     .task-content {
         width: 100%;
-        margin-top: 8px;
-        padding-left: 41px;
+        margin-top: 6px;
+        padding-left: 36px;
+        font-size: 0.9em;
+    }
+
+    .task-status {
+        font-size: 0.75em;
     }
 
     .controls {
         flex-direction: column;
         align-items: stretch;
+        gap: 8px;
+    }
+
+    .controls .btn {
+        font-size: 0.85em;
+        padding: 10px 12px;
     }
 
     .voice-settings {
         flex-direction: column;
         align-items: flex-start;
         margin-left: 0;
+        gap: 8px;
+        font-size: 0.85em;
     }
 
     .identity-options {
         flex-direction: column;
     }
 
+    .identity-card {
+        padding: 12px;
+    }
+
+    .identity-icon {
+        font-size: 1.5em;
+    }
+
+    .identity-title {
+        font-size: 0.9em;
+    }
+
     .settings-modal {
         margin: 10px;
-        padding: 25px;
+        padding: 20px;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+
+    .settings-modal h2 {
+        font-size: 1.2em;
+    }
+
+    .form-label {
+        font-size: 0.9em;
     }
 
     .header-top {
-        padding: 12px 15px;
+        padding: 10px 12px;
         flex-wrap: wrap;
-        gap: 10px;
+        gap: 8px;
+    }
+
+    #openSettings {
+        font-size: 1.8em;
+        padding: 6px 8px;
+    }
+
+    .current-time {
+        padding: 15px;
     }
 
     .btn-icon {
-        font-size: 1.3em;
+        font-size: 1.2em;
     }
 
     .edit-modal {
         margin: 5px;
         max-height: 95vh;
+        width: 95%;
+    }
+
+    .edit-header {
+        padding: 12px 15px;
+    }
+
+    .edit-content {
+        padding: 10px;
     }
 
     .task-edit-item {
         flex-direction: column;
+        gap: 8px;
+        padding: 10px;
     }
 
     .task-edit-item .time-input,
-    .task-edit-item .task-input {
+    .task-edit-item .task-input,
+    .task-edit-item .message-input,
+    .task-edit-item .repeat-input {
         width: 100%;
+        font-size: 0.9em;
+    }
+
+    .btn-delete-task {
+        align-self: flex-end;
     }
 
     .schedule-tabs {
-        flex-direction: column;
-        gap: 10px;
+        flex-direction: row;
+        gap: 8px;
     }
 
     .tab-btn {
-        padding: 14px;
+        padding: 10px;
+        font-size: 0.85em;
+        flex: 1;
+    }
+
+    .stats {
+        padding: 12px;
+    }
+
+    .next-task {
+        padding: 12px;
+    }
+
+    .next-task h3 {
+        font-size: 0.9em;
+    }
+
+    #nextTaskText {
+        font-size: 0.9em;
+    }
+
+    .modal-content {
+        margin: 15px;
+        padding: 20px;
+    }
+
+    .modal-content h2 {
+        font-size: 1.2em;
+    }
+
+    .btn {
+        padding: 10px 15px;
+        font-size: 0.9em;
+    }
+
+    .btn-large {
+        padding: 12px 20px;
+        font-size: 1em;
+    }
+
+    .btn-small {
+        padding: 6px 10px;
+        font-size: 0.8em;
+    }
+
+    .btn-close-modal {
+        top: 10px;
+        right: 10px;
+        font-size: 1.2em;
+    }
+
+    /* 进度详情弹窗手机适配 */
+    .progress-detail-modal {
+        width: 95%;
+        max-height: 90vh;
+        margin: 10px;
+    }
+
+    .progress-detail-content {
+        max-height: calc(90vh - 150px);
+        padding: 10px;
+    }
+
+    .detail-section {
+        padding: 10px;
+        margin-bottom: 8px;
+    }
+
+    .detail-title {
+        font-size: 0.85em;
+    }
+
+    .detail-item {
+        padding: 6px 10px;
+        font-size: 0.85em;
+    }
+
+    .detail-item .detail-time {
+        min-width: 45px;
+    }
+
+    .edit-actions {
+        padding: 10px;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .edit-actions .btn {
+        width: 100%;
+    }
+
+    /* 隐藏装饰元素节省空间 */
+    .flower-decoration,
+    .flower-decoration2,
+    .flower-decoration3 {
+        display: none;
     }
 }
 
