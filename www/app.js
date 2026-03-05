@@ -862,7 +862,7 @@ function setupEventListeners() {
         });
     });
 
-    // 保存设置函数
+    // 保存设置函数 - 使用window变量确保全局同步
     function saveUserSettings() {
         const nameInput = document.getElementById('newUserName');
         const name = nameInput.value.trim();
@@ -879,12 +879,16 @@ function setupEventListeners() {
             return;
         }
 
-        // 保存该身份的名称
-        savedNames[identity] = name;
-        localStorage.setItem('savedNames', JSON.stringify(savedNames));
+        // 保存该身份的名称 - 使用window变量
+        if (!window.savedNames) {
+            window.savedNames = JSON.parse(localStorage.getItem('savedNames')) || { student: '', toddler: '' };
+        }
+        window.savedNames[identity] = name;
+        localStorage.setItem('savedNames', JSON.stringify(window.savedNames));
 
-        userSettings = { name, identity, customSchedules: null };
-        localStorage.setItem('userSettings', JSON.stringify(userSettings));
+        // 更新全局设置
+        window.userSettings = { name, identity, customSchedules: null };
+        localStorage.setItem('userSettings', JSON.stringify(window.userSettings));
 
         // Android兼容：使用多种方式关闭弹窗
         const settingsModal = document.getElementById('settingsModal');
