@@ -804,8 +804,8 @@ function setupEventListeners() {
         });
     });
 
-    // 保存设置
-    document.getElementById('saveSettings').addEventListener('click', () => {
+    // 保存设置函数
+    function saveUserSettings() {
         const nameInput = document.getElementById('newUserName');
         const name = nameInput.value.trim();
         const identityElement = document.querySelector('input[name="identity"]:checked');
@@ -841,13 +841,20 @@ function setupEventListeners() {
             ? `${name}小朋友你好，我是你的小助手，会提醒你该做什么事情啦！`
             : `${name}同学你好，我是你的学习小助手，会提醒你学习和休息的时间！`;
         setTimeout(() => {
-            // 尝试播放语音，如果失败则静默处理
             try {
                 speak(welcomeMsg);
             } catch(e) {
                 console.log('语音播放需要用户交互');
             }
         }, 500);
+    }
+
+    // 保存设置 - 支持click和touchend事件（Android兼容）
+    const saveSettingsBtn = document.getElementById('saveSettings');
+    saveSettingsBtn.addEventListener('click', saveUserSettings);
+    saveSettingsBtn.addEventListener('touchend', function(e) {
+        e.preventDefault();
+        saveUserSettings();
     });
 
     // 打开设置（编辑当前用户）
