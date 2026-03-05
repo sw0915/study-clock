@@ -16,7 +16,7 @@
     <!-- 用户设置弹窗 -->
     <div id="settingsModal" class="modal show" data-mode="">
         <div class="modal-content settings-modal">
-            <button id="closeSettingsModal" class="btn-close-modal">✕</button>
+            <button id="closeSettingsModal" class="btn-close-modal" onclick="closeSettingsModal()" ontouchstart="closeSettingsModal()">✕</button>
             <h2>基本设置</h2>
             <div class="settings-form">
                 <!-- 第一行： 昵称 -->
@@ -45,7 +45,7 @@
                     </div>
                 </div>
             </div>
-            <button id="saveSettings" class="btn btn-primary btn-large">开始使用</button>
+            <button id="saveSettings" class="btn btn-primary btn-large" onclick="return handleSaveSettings()" ontouchstart="return handleSaveSettings()">开始使用</button>
         </div>
     </div>
 

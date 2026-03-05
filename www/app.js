@@ -1,5 +1,54 @@
 // 学习闹钟提醒 - 主程序（单用户版）
 
+// ========== 全局函数（供HTML onclick调用）==========
+function closeSettingsModal() {
+    if (window.userSettings) {
+        const modal = document.getElementById('settingsModal');
+        if (modal) {
+            modal.classList.remove('show');
+            modal.style.display = 'none';
+        }
+    }
+}
+
+function handleSaveSettings() {
+    const nameInput = document.getElementById('newUserName');
+    const name = nameInput.value.trim();
+    const identityElement = document.querySelector('input[name="identity"]:checked');
+    const identity = identityElement ? identityElement.value : 'student';
+
+    if (!name) {
+        nameInput.style.borderColor = '#ef5350';
+        nameInput.placeholder = '请输入名字';
+        setTimeout(() => {
+            nameInput.style.borderColor = '#667eea';
+            nameInput.placeholder = '请输入名字';
+        }, 2000);
+        return false;
+    }
+
+    // 保存设置
+    if (!window.savedNames) {
+        window.savedNames = JSON.parse(localStorage.getItem('savedNames')) || { student: '', toddler: '' };
+    }
+    window.savedNames[identity] = name;
+    localStorage.setItem('savedNames', JSON.stringify(window.savedNames));
+
+    window.userSettings = { name, identity, customSchedules: null };
+    localStorage.setItem('userSettings', JSON.stringify(window.userSettings));
+
+    // 关闭弹窗
+    const modal = document.getElementById('settingsModal');
+    modal.classList.remove('show');
+    modal.style.display = 'none';
+
+    // 更新页面
+    if (typeof updatePageTitle === 'function') updatePageTitle();
+    if (typeof renderTasks === 'function') renderTasks();
+
+    return false;
+}
+
 // 默认小学生时间表
 const defaultStudentSchedules = {
     weekday: [
