@@ -123,14 +123,23 @@ const defaultToddlerSchedules = {
     ]
 };
 
-// 全局状态 - 单用户
-let userSettings = JSON.parse(localStorage.getItem('userSettings')) || null;  // {name, identity, customSchedules}
-let savedNames = JSON.parse(localStorage.getItem('savedNames')) || { student: '', toddler: '' };  // 保存各身份的名称
-let completedTasks = JSON.parse(localStorage.getItem('completedTasks') || '{}');
-let inProgressTasks = JSON.parse(localStorage.getItem('inProgressTasks') || '{}');  // 进行中的任务
-let reminderStatus = JSON.parse(localStorage.getItem('reminderStatus') || '{}');
-let selectedVoice = null;
-let editingSchedules = null;
+// 全局状态 - 单用户（使用window以便全局函数访问）
+window.userSettings = JSON.parse(localStorage.getItem('userSettings')) || null;  // {name, identity, customSchedules}
+window.savedNames = JSON.parse(localStorage.getItem('savedNames')) || { student: '', toddler: '' };  // 保存各身份的名称
+window.completedTasks = JSON.parse(localStorage.getItem('completedTasks') || '{}');
+window.inProgressTasks = JSON.parse(localStorage.getItem('inProgressTasks') || '{}');  // 进行中的任务
+window.reminderStatus = JSON.parse(localStorage.getItem('reminderStatus') || '{}');
+window.selectedVoice = null;
+window.editingSchedules = null;
+
+// 为了兼容现有代码，创建本地引用
+let userSettings = window.userSettings;
+let savedNames = window.savedNames;
+let completedTasks = window.completedTasks;
+let inProgressTasks = window.inProgressTasks;
+let reminderStatus = window.reminderStatus;
+let selectedVoice = window.selectedVoice;
+let editingSchedules = window.editingSchedules;
 
 // 获取用户的时间表
 function getSchedules() {
