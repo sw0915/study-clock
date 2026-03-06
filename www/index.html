@@ -18,7 +18,7 @@
         <div class="modal-content settings-modal">
             <button id="closeSettingsModal" class="btn-close-modal"
                 onclick="event.preventDefault(); closeSettingsModal(); return false;"
-                ontouchend="event.preventDefault();"
+                ontouchend="event.preventDefault(); closeSettingsModal(); return false;"
                 ontouchstart="event.preventDefault();"
                 style="touch-action: manipulation; -webkit-tap-highlight-color: transparent;">✕</button>
             <h2>基本设置</h2>
@@ -37,7 +37,7 @@
                             <span class="identity-card">
                                 <span class="identity-icon">📚</span>
                                 <span class="identity-title">小学生</span>
-                            <span class="identity-title">婴幼儿</span>
+                            </span>
                         </label>
                         <label class="identity-option">
                             <input type="radio" name="identity" value="toddler">
@@ -60,7 +60,7 @@
     <div class="container">
         <header>
             <div class="header-top">
-                <h1 id="pageTitle">小贝塔闹钟</h1>
+                <h1 id="pageTitle">学习闹钟提醒</h1>
                 <button id="openSettings" class="btn btn-icon" title="设置">⚙️</button>
             </div>
             <div class="current-time">
@@ -111,6 +111,7 @@
             <div class="stats-header">
                 <h3>今日进度</h3>
                 <button id="showProgressDetail" class="btn btn-small btn-detail">详情</button>
+            </div>
             <div class="progress-bar">
                 <div class="progress-fill" id="progressFill"></div>
             </div>
@@ -128,12 +129,8 @@
         <div class="modal-content">
             <h2>提醒</h2>
             <p id="reminderText"></p>
-            <button id="reminderClose" class="btn btn-primary">知道了</button>
             <p id="reminderCountdown" class="countdown-text" style="display: none; color: #ff9800; font-size: 0.9em;"></p>
-            <button id="reminderClose" class="btn btn-primary btn-large"
-                onclick="event.preventDefault(); stopAllReminderTimers(); return false;"
-                ontouchend="event.preventDefault(); stopAllReminderTimers(); return false;"
-                style="touch-action: manipulation; -webkit-tap-highlight-color: transparent;">✕</button>
+            <button id="reminderClose" class="btn btn-primary">知道了</button>
         </div>
     </div>
 
@@ -181,6 +178,10 @@
                     <div id="inProgressTaskList" class="detail-list"></div>
                 </div>
                 <div class="detail-section">
+                    <h4 class="detail-title pending-title">⏳ 待完成</h4>
+                    <div id="pendingTaskList" class="detail-list"></div>
+                </div>
+                <div class="detail-section">
                     <h4 class="detail-title passed-title">⏰ 已过期</h4>
                     <div id="passedTaskList" class="detail-list"></div>
                 </div>
@@ -188,7 +189,6 @@
             <div class="edit-actions">
                 <button id="closeProgressDetailBtn" class="btn btn-primary">关闭</button>
             </div>
-        </div>
     </div>
 
     <script src="app.js"></script>
@@ -204,7 +204,7 @@
                         console.log('SW registration failed:', error);
                     });
             });
-        });
+        }
     </script>
 </body>
 </html>

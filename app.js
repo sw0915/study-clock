@@ -169,7 +169,156 @@ document.addEventListener('DOMContentLoaded', () => {
     setInterval(updateTime, 1000);
     setInterval(checkReminders, 15000);
     setupEventListeners();
+    initWakeLock(); // 初始化屏幕常亮功能
 });
+
+// ========== 屏幕常亮功能 ==========
+let wakeLock = null;
+let keepAliveAudio = null;
+let keepAliveInterval = null;
+
+// 请求屏幕常亮
+async function requestWakeLock() {
+    try {
+        if ('wakeLock' in navigator) {
+            wakeLock = await navigator.wakeLock.request('screen');
+            console.log('屏幕常亮已启用');
+
+            wakeLock.addEventListener('release', () => {
+                console.log('屏幕常亮已释放');
+            });
+        }
+    } catch (err) {
+        console.log('无法启用屏幕常亮:', err.name, err.message);
+    }
+}
+
+// 释放屏幕常亮
+function releaseWakeLock() {
+    if (wakeLock) {
+        wakeLock.release();
+        wakeLock = null;
+    }
+}
+
+// 创建静音音频用于保持唤醒
+function createKeepAliveAudio() {
+    try {
+        // 创建一个很短的静音音频
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+
+        // 设置为静音
+        gainNode.gain.value = 0.001;
+        oscillator.frequency.value = 1;
+
+        return { audioContext, oscillator, gainNode };
+    } catch (e) {
+        console.log('无法创建音频上下文:', e);
+        return null;
+    }
+}
+
+// 启动音频保活
+function startAudioKeepAlive() {
+    if (keepAliveInterval) return;
+
+    // 每分钟播放一次静音，防止系统休眠
+    keepAliveInterval = setInterval(() => {
+        try {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            gainNode.gain.value = 0.001; // 几乎静音
+            oscillator.frequency.value = 1; // 低频
+
+            oscillator.start();
+            oscillator.stop(audioContext.currentTime + 0.1);
+
+            // 关闭音频上下文以释放资源
+            setTimeout(() => {
+                audioContext.close();
+            }, 200);
+        } catch (e) {
+            // 忽略错误
+        }
+    }, 60000); // 每分钟一次
+
+    console.log('音频保活已启动');
+}
+
+// 停止音频保活
+function stopAudioKeepAlive() {
+    if (keepAliveInterval) {
+        clearInterval(keepAliveInterval);
+        keepAliveInterval = null;
+    }
+}
+
+// 初始化屏幕常亮
+function initWakeLock() {
+    // 页面加载后请求屏幕常亮
+    requestWakeLock();
+
+    // 启动音频保活
+    startAudioKeepAlive();
+
+    // 页面可见性变化时重新请求
+    document.addEventListener('visibilitychange', async () => {
+        if (document.visibilityState === 'visible') {
+            await requestWakeLock();
+            startAudioKeepAlive();
+            // 检查是否有错过的提醒
+            checkMissedReminders();
+        } else {
+            // 页面隐藏时仍然保持音频保活
+            // 不停止，继续运行
+        }
+    });
+}
+
+// 检查错过的提醒
+function checkMissedReminders() {
+    if (!userSettings) return;
+
+    const now = new Date();
+    const currentTime = now.getHours() * 60 + now.getMinutes();
+    const scheduleType = isWeekend() ? 'weekend' : 'weekday';
+    const todayKey = getTodayKey();
+    const schedules = getSchedules();
+
+    // 查找当前时间之前的任务
+    schedules[scheduleType].forEach((item, index) => {
+        const [hours, minutes] = item.time.split(':').map(Number);
+        const taskTime = hours * 60 + minutes;
+        const taskKey = `${scheduleType}-${index}`;
+        const reminderKey = `${todayKey}-${taskKey}`;
+
+        // 检查是否是最近30分钟内的任务且未完成
+        const timeDiff = currentTime - taskTime;
+        if (timeDiff >= 0 && timeDiff <= 30 && item.enabled !== false) {
+            // 任务时间在最近30分钟内
+            if (!completedTasks[todayKey]?.[taskKey] &&
+                !inProgressTasks[todayKey]?.[taskKey] &&
+                !passedTasks[todayKey]?.[taskKey]) {
+
+                // 没有提醒过，触发提醒
+                if (!reminderStatus[reminderKey]) {
+                    console.log('触发错过的提醒:', item.task);
+                    showReminder(item, taskKey, reminderKey, true);
+                }
+            }
+        }
+    });
+}
 
 // 检查用户设置
 function checkSettings() {
