@@ -1,19 +1,59 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
   <defs>
-    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+    <linearGradient id="bellGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFD700;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#FFA500;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#FF8C00;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="shineGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFFFFF;stop-opacity:0.8" />
+      <stop offset="100%" style="stop-color:#FFFFFF;stop-opacity:0" />
+    </linearGradient>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" style="stop-color:#E3F2FD"/>
-      <stop offset="100%" style="stop-color:#90CAF9"/>
+      <stop offset="100%" style="stop-color:#64B5F6"/>
     </linearGradient>
   </defs>
-  <rect width="512" height="512" rx="80" fill="url(#bg)"/>
-  <circle cx="256" cy="256" r="160" fill="#1565C0" stroke="#0D47A1" stroke-width="12"/>
-  <circle cx="256" cy="256" r="140" fill="#E3F2FD"/>
-  <line x1="256" y1="256" x2="256" y2="150" stroke="#1565C0" stroke-width="12" stroke-linecap="round"/>
-  <line x1="256" y1="256" x2="340" y2="256" stroke="#1565C0" stroke-width="10" stroke-linecap="round"/>
-  <circle cx="256" cy="256" r="16" fill="#1565C0"/>
-  <circle cx="256" cy="120" r="12" fill="#1565C0"/>
-  <circle cx="392" cy="256" r="12" fill="#1565C0"/>
-  <circle cx="256" cy="392" r="12" fill="#1565C0"/>
-  <circle cx="120" cy="256" r="12" fill="#1565C0"/>
-  <text x="256" y="480" text-anchor="middle" font-size="48" font-weight="bold" fill="#1565C0">⏰</text>
+
+  <!-- Background circle -->
+  <circle cx="256" cy="256" r="240" fill="url(#bgGradient)"/>
+
+  <!-- Bell body -->
+  <path d="M256 90c-66 0-118 52-118 118v95c0 18-15 33-33 33h-10v28h322v-28h-10c-18 0-33-15-33-33v-95c0-66-52-118-118-118z"
+        fill="url(#bellGradient)"
+        stroke="#E65100"
+        stroke-width="8"/>
+
+  <!-- Bell clapper -->
+  <circle cx="256" cy="370" r="32" fill="#FFB74D" stroke="#E65100" stroke-width="6"/>
+
+  <!-- Bell top -->
+  <ellipse cx="256" cy="95" rx="36" ry="22" fill="url(#bellGradient)" stroke="#E65100" stroke-width="5"/>
+
+  <!-- Bell handle -->
+  <rect x="246" y="58" width="20" height="42" rx="10" fill="url(#bellGradient)" stroke="#E65100" stroke-width="4"/>
+
+  <!-- Shine effect -->
+  <ellipse cx="205" cy="185" rx="25" ry="45" fill="url(#shineGradient)" transform="rotate(-20 205 185)"/>
+
+  <!-- Cute face - eyes -->
+  <ellipse cx="220" cy="245" rx="18" ry="22" fill="#333"/>
+  <ellipse cx="292" cy="245" rx="18" ry="22" fill="#333"/>
+
+  <!-- Eye highlights -->
+  <circle cx="215" cy="236" r="7" fill="#FFF"/>
+  <circle cx="287" cy="236" r="7" fill="#FFF"/>
+
+  <!-- Cute smile -->
+  <path d="M225 295 Q256 330 287 295" fill="none" stroke="#333" stroke-width="7" stroke-linecap="round"/>
+
+  <!-- Rosy cheeks -->
+  <ellipse cx="185" cy="280" rx="22" ry="13" fill="#FFB6C1" opacity="0.7"/>
+  <ellipse cx="327" cy="280" rx="22" ry="13" fill="#FFB6C1" opacity="0.7"/>
+
+  <!-- Stars decoration -->
+  <polygon points="95,140 99,152 112,152 102,160 106,172 95,164 84,172 88,160 78,152 91,152" fill="#FFD700"/>
+  <polygon points="417,140 421,152 434,152 424,160 428,172 417,164 406,172 410,160 400,152 413,152" fill="#FFD700"/>
+  <polygon points="95,380 98,388 107,388 100,393 103,402 95,397 87,402 90,393 83,388 92,388" fill="#FFD700"/>
+  <polygon points="417,380 420,388 429,388 422,393 425,402 417,397 409,402 412,393 405,388 414,388" fill="#FFD700"/>
 </svg>

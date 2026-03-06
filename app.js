@@ -37,6 +37,10 @@ function handleSaveSettings() {
     window.userSettings = { name, identity, customSchedules: null };
     localStorage.setItem('userSettings', JSON.stringify(window.userSettings));
 
+    // 同步本地变量引用
+    userSettings = window.userSettings;
+    savedNames = window.savedNames;
+
     // 关闭弹窗
     const modal = document.getElementById('settingsModal');
     modal.classList.remove('show');
@@ -128,6 +132,7 @@ window.userSettings = JSON.parse(localStorage.getItem('userSettings')) || null; 
 window.savedNames = JSON.parse(localStorage.getItem('savedNames')) || { student: '', toddler: '' };  // 保存各身份的名称
 window.completedTasks = JSON.parse(localStorage.getItem('completedTasks') || '{}');
 window.inProgressTasks = JSON.parse(localStorage.getItem('inProgressTasks') || '{}');  // 进行中的任务
+window.passedTasks = JSON.parse(localStorage.getItem('passedTasks') || '{}');  // 已过期任务（用户未响应）
 window.reminderStatus = JSON.parse(localStorage.getItem('reminderStatus') || '{}');
 window.selectedVoice = null;
 window.editingSchedules = null;
@@ -137,6 +142,7 @@ let userSettings = window.userSettings;
 let savedNames = window.savedNames;
 let completedTasks = window.completedTasks;
 let inProgressTasks = window.inProgressTasks;
+let passedTasks = window.passedTasks;
 let reminderStatus = window.reminderStatus;
 let selectedVoice = window.selectedVoice;
 let editingSchedules = window.editingSchedules;
@@ -187,7 +193,7 @@ function updatePageTitle() {
             ? `${userSettings.name}的作息提醒`
             : `${userSettings.name}的学习闹钟`;
     } else {
-        titleEl.textContent = '学习闹钟提醒';
+        titleEl.textContent = '小贝塔闹钟';
     }
 }
 
@@ -507,6 +513,7 @@ function updateTaskStatus() {
         taskEl.classList.remove('current', 'upcoming', 'passed', 'completed');
 
         const isCompleted = completedTasks[todayKey]?.[taskKey];
+        const isPassed = passedTasks[todayKey]?.[taskKey];  // 用户未响应导致的过期
         const isInProgress = inProgressTasks[todayKey]?.[taskKey];
 
         // 判断任务状态
@@ -524,6 +531,20 @@ function updateTaskStatus() {
             if (checkbox) {
                 checkbox.disabled = true;
                 checkbox.checked = true;
+            }
+        } else if (isPassed) {
+            // 已过期（用户未在5分钟内响应）- 永久过期，禁止操作
+            taskEl.classList.add('passed');
+            if (statusEl) {
+                statusEl.textContent = '已过期';
+                statusEl.className = 'task-status passed';
+            }
+            if (alarmSwitch) {
+                alarmSwitch.disabled = true;
+                alarmSwitch.checked = false;
+            }
+            if (checkbox) {
+                checkbox.disabled = true;
             }
         } else if (isInProgress) {
             // 进行中 - 点击了"知道了"，禁止用户操作
@@ -640,6 +661,34 @@ function checkReminders() {
 
 // 当前提醒的任务key（用于点击"知道了"后自动完成）
 let currentReminderTaskKey = null;
+// 语音重复播报相关
+let reminderRepeatTimer = null;
+let reminderRepeatCount = 0;
+const MAX_REMINDER_REPEAT = 5;
+const REMINDER_REPEAT_INTERVAL = 8000; // 8秒重复一次
+// 5分钟超时自动关闭
+let reminderTimeoutTimer = null;
+let reminderTimeoutCountdown = null;
+const REMINDER_TIMEOUT_MS = 5 * 60 * 1000; // 5分钟
+const REMINDER_COUNTDOWN_INTERVAL = 1000; // 1秒更新一次
+
+// 停止所有提醒相关定时器
+function stopAllReminderTimers() {
+    if (reminderRepeatTimer) {
+        clearTimeout(reminderRepeatTimer);
+        reminderRepeatTimer = null;
+    }
+    if (reminderTimeoutTimer) {
+        clearTimeout(reminderTimeoutTimer);
+        reminderTimeoutTimer = null;
+    }
+    if (reminderTimeoutCountdown) {
+        clearInterval(reminderTimeoutCountdown);
+        reminderTimeoutCountdown = null;
+    }
+    reminderRepeatCount = 0;
+    speechSynthesis.cancel();
+}
 
 // 显示提醒
 function showReminder(item, taskKey, reminderKey, isFirst) {
@@ -651,13 +700,25 @@ function showReminder(item, taskKey, reminderKey, isFirst) {
 
     text.textContent = displayText;
     modal.classList.add('show');
+    modal.style.display = 'flex'; // 确保modal显示
+
+    // 隐藏倒计时显示
+    const countdownEl = document.getElementById('reminderCountdown');
+    if (countdownEl) countdownEl.style.display = 'none';
 
     // 保存当前提醒的taskKey，用于点击"知道了"后自动完成
     currentReminderTaskKey = taskKey;
 
-    // 播报
+    // 停止之前的定时器（如果有）
+    stopAllReminderTimers();
+
+    // 首次播报
+    reminderRepeatCount = 1;
     speak(displayText);
     playNotificationSound();
+
+    // 设置重复播报
+    scheduleReminderRepeat(displayText, taskKey);
 
     // 更新提醒状态
     const now = new Date();
@@ -666,6 +727,102 @@ function showReminder(item, taskKey, reminderKey, isFirst) {
         lastTime: now.getTime()
     };
     localStorage.setItem('reminderStatus', JSON.stringify(reminderStatus));
+
+    // 更新任务列表显示
+    updateTaskStatus();
+}
+
+// 安排语音重复播报
+function scheduleReminderRepeat(displayText, taskKey) {
+    reminderRepeatTimer = setTimeout(() => {
+        // 检查是否还在显示提醒弹窗
+        const modal = document.getElementById('reminderModal');
+        if (!modal.classList.contains('show') || modal.style.display === 'none') {
+            stopAllReminderTimers();
+            return;
+        }
+
+        // 检查是否达到最大重复次数
+        if (reminderRepeatCount >= MAX_REMINDER_REPEAT) {
+            // 开始5分钟倒计时
+            startReminderTimeout(taskKey);
+            return;
+        }
+
+        // 继续播报
+        reminderRepeatCount++;
+        speak(displayText);
+        playNotificationSound();
+
+        // 继续安排下一次重复
+        scheduleReminderRepeat(displayText, taskKey);
+    }, REMINDER_REPEAT_INTERVAL);
+}
+
+// 开始5分钟超时倒计时
+function startReminderTimeout(taskKey) {
+    // 显示倒计时
+    const countdownEl = document.getElementById('reminderCountdown');
+    if (countdownEl) {
+        countdownEl.style.display = 'block';
+    }
+
+    let remainingSeconds = REMINDER_TIMEOUT_MS / 1000;
+
+    // 更新倒计时显示
+    function updateCountdown() {
+        const minutes = Math.floor(remainingSeconds / 60);
+        const seconds = remainingSeconds % 60;
+        if (countdownEl) {
+            countdownEl.textContent = `请在 ${minutes}:${seconds.toString().padStart(2, '0')} 内点击"知道了"，否则任务将标记为已过期`;
+        }
+    }
+
+    updateCountdown();
+
+    // 每秒更新倒计时
+    reminderTimeoutCountdown = setInterval(() => {
+        remainingSeconds--;
+        if (remainingSeconds <= 0) {
+            // 超时，自动关闭并标记为已过期
+            autoExpireTask(taskKey);
+        } else {
+            updateCountdown();
+        }
+    }, REMINDER_COUNTDOWN_INTERVAL);
+
+    // 设置超时定时器（备用）
+    reminderTimeoutTimer = setTimeout(() => {
+        autoExpireTask(taskKey);
+    }, REMINDER_TIMEOUT_MS);
+}
+
+// 超时自动标记任务为已过期
+function autoExpireTask(taskKey) {
+    stopAllReminderTimers();
+
+    // 关闭弹窗
+    const modal = document.getElementById('reminderModal');
+    modal.classList.remove('show');
+    modal.style.display = 'none';
+
+    // 标记任务为已过期（通过不添加到inProgressTasks，让它自然成为passed状态）
+    // 同时添加到passedTasks以明确标记
+    const todayKey = getTodayKey();
+    if (!window.passedTasks) {
+        window.passedTasks = JSON.parse(localStorage.getItem('passedTasks') || '{}');
+    }
+    if (!window.passedTasks[todayKey]) {
+        window.passedTasks[todayKey] = {};
+    }
+    window.passedTasks[todayKey][taskKey] = true;
+    localStorage.setItem('passedTasks', JSON.stringify(window.passedTasks));
+
+    // 清除当前任务key
+    currentReminderTaskKey = null;
+
+    // 更新任务列表显示
+    updateTaskStatus();
 }
 
 // 播放提示音
@@ -807,10 +964,14 @@ function saveSchedule() {
     userSettings.customSchedules = editingSchedules;
     localStorage.setItem('userSettings', JSON.stringify(userSettings));
 
+    // 同步全局变量
+    window.userSettings = userSettings;
+
     // 清除今日完成状态、进行中状态和提醒状态
     const todayKey = getTodayKey();
     delete completedTasks[todayKey];
     delete inProgressTasks[todayKey];
+    delete passedTasks[todayKey];
     Object.keys(reminderStatus).forEach(key => {
         if (key.startsWith(todayKey)) {
             delete reminderStatus[key];
@@ -818,6 +979,7 @@ function saveSchedule() {
     });
     localStorage.setItem('completedTasks', JSON.stringify(completedTasks));
     localStorage.setItem('inProgressTasks', JSON.stringify(inProgressTasks));
+    localStorage.setItem('passedTasks', JSON.stringify(passedTasks));
     localStorage.setItem('reminderStatus', JSON.stringify(reminderStatus));
 
     renderTasks();
@@ -832,6 +994,8 @@ function resetSchedule() {
     if (confirm('确定要恢复默认时间表吗？你的自定义设置将被清除。')) {
         userSettings.customSchedules = null;
         localStorage.setItem('userSettings', JSON.stringify(userSettings));
+        // 同步全局变量
+        window.userSettings = userSettings;
         editingSchedules = JSON.parse(JSON.stringify(getDefaultSchedules()));
         renderEditForm();
     }
@@ -848,6 +1012,8 @@ function toggleAlarm(type, index, enabled) {
         userSettings.customSchedules[type][index].enabled = enabled;
     }
     localStorage.setItem('userSettings', JSON.stringify(userSettings));
+    // 同步全局变量
+    window.userSettings = userSettings;
     updateTaskStatus();
 }
 
@@ -889,6 +1055,10 @@ function setupEventListeners() {
         // 更新全局设置
         window.userSettings = { name, identity, customSchedules: null };
         localStorage.setItem('userSettings', JSON.stringify(window.userSettings));
+
+        // 同步本地变量引用
+        userSettings = window.userSettings;
+        savedNames = window.savedNames;
 
         // Android兼容：使用多种方式关闭弹窗
         const settingsModal = document.getElementById('settingsModal');
@@ -1001,6 +1171,7 @@ function setupEventListeners() {
             const todayKey = getTodayKey();
             completedTasks[todayKey] = {};
             inProgressTasks[todayKey] = {};
+            passedTasks[todayKey] = {};
             Object.keys(reminderStatus).forEach(key => {
                 if (key.startsWith(todayKey)) {
                     delete reminderStatus[key];
@@ -1008,6 +1179,7 @@ function setupEventListeners() {
             });
             localStorage.setItem('completedTasks', JSON.stringify(completedTasks));
             localStorage.setItem('inProgressTasks', JSON.stringify(inProgressTasks));
+            localStorage.setItem('passedTasks', JSON.stringify(passedTasks));
             localStorage.setItem('reminderStatus', JSON.stringify(reminderStatus));
             renderTasks();
         }
@@ -1015,8 +1187,10 @@ function setupEventListeners() {
 
     // 关闭提醒弹窗 - 点击"知道了"标记任务为"进行中"
     document.getElementById('reminderClose').addEventListener('click', () => {
-        document.getElementById('reminderModal').classList.remove('show');
-        speechSynthesis.cancel();
+        const reminderModal = document.getElementById('reminderModal');
+        reminderModal.classList.remove('show');
+        reminderModal.style.display = 'none';
+        stopAllReminderTimers(); // 停止所有定时器
 
         // 标记任务为"进行中"
         if (currentReminderTaskKey) {
@@ -1033,8 +1207,10 @@ function setupEventListeners() {
 
     document.getElementById('reminderModal').addEventListener('click', (e) => {
         if (e.target.id === 'reminderModal') {
-            document.getElementById('reminderModal').classList.remove('show');
-            speechSynthesis.cancel();
+            const reminderModal = document.getElementById('reminderModal');
+            reminderModal.classList.remove('show');
+            reminderModal.style.display = 'none';
+            stopAllReminderTimers(); // 停止所有定时器
 
             // 点击背景也标记任务为"进行中"
             if (currentReminderTaskKey) {
@@ -1134,6 +1310,7 @@ function showProgressDetail() {
         const taskTime = hours * 60 + minutes;
         const taskKey = `${scheduleType}-${index}`;
         const isCompleted = completedTasks[todayKey]?.[taskKey];
+        const isPassed = passedTasks[todayKey]?.[taskKey];  // 用户未响应导致的过期
         const isInProgress = inProgressTasks[todayKey]?.[taskKey];
         const isEnabled = item.enabled !== false;
 
@@ -1150,6 +1327,11 @@ function showProgressDetail() {
             detailItem.classList.add('completed');
             completedList.appendChild(detailItem);
             completedCount++;
+        } else if (isPassed) {
+            // 用户未响应导致的过期
+            detailItem.classList.add('passed');
+            passedList.appendChild(detailItem);
+            passedCount++;
         } else if (isInProgress) {
             detailItem.classList.add('inprogress');
             inProgressList.appendChild(detailItem);

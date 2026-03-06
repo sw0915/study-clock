@@ -1,7 +1,7 @@
 {
-    "name": "学习闹钟提醒",
-    "short_name": "学习闹钟",
-    "description": "儿童学习闹钟提醒应用，帮助孩子养成良好作息习惯",
+    "name": "小贝塔闹钟",
+    "short_name": "小贝塔闹钟",
+    "description": "小贝塔闹钟 - 帮助孩子养成良好作息习惯的智能提醒应用",
     "start_url": "/index.html",
     "display": "standalone",
     "background_color": "#E3F2FD",
